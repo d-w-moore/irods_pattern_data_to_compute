@@ -1,0 +1,18 @@
+#!/bin/bash
+
+FUNCTIONS=/var/lib/irods/compute/irods_compute_functions
+if [ -r $FUNCTIONS ]; then
+  . $FUNCTIONS
+
+UUID=$(
+  create_irods_slurm_desc -v
+)
+
+##-- dwm -- debug: # set_irods_slurm_var "hello" "1"
+
+#  -- Log the launch of this Slurm job --
+
+[ -n "$UUID" ] && {
+  echo $0 $MUTX `date` "$UUID" >>/tmp/prolog ; }
+
+fi # -r $FUNCTIONS

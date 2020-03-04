@@ -1,0 +1,113 @@
+# Source only from Bash
+
+. "$(dirname "${BASH_SOURCE}")/slurmcoll.bash"
+MUTX_DIR=${SLURM_COLLECTION}
+if [[ "$MUTX_DIR"/ = /?*/ && "${SLURM_JOB_ID}" = ?* ]]; then
+    MUTX="$MUTX_DIR/${SLURM_CLUSTER_NAME}_slurmjob_${SLURM_JOB_ID}.txt"
+else
+    MUTX=""
+fi
+
+#=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+#
+# - create/ test/ destroy job descriptor (an iRODS data object with the name
+#     contained in the "$MUTX" variable above, valid as long as not in iRODS trash
+#
+#--- ( CREATE ) : form : [ -v(erbose) ]  [uuid]
+# -     uuid is generated based on time / host info if not given.
+#=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+create_irods_slurm_desc ()
+{
+  local VERBOSE="0" status=1
+  if [[ "$1" = -v* ]]; then
+    shift; VERBOSE=1
+  fi
+
+  local UUID="$1"
+  if [ -z "$UUID" ]; then
+    UUID=$(uuidgen -t)
+  fi
+
+  local M=$(basename "$MUTX")
+  [ -n "$MUTX" ] && touch "/tmp/$M" && \
+  [ -n "$UUID" ] && echo "$UUID" >"/tmp/$M"
+
+  if iput "/tmp/$M" "$MUTX" >/dev/null 2>&1
+  then
+    imeta set -d "$MUTX" uuid $UUID # help tracking of SLURM job through
+    status=$?                       # submit, prolog, epilog
+  fi
+
+  [ $VERBOSE -ne 0 ] && echo "$UUID"
+
+  return $status
+}
+
+#=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+#--- ( TEST )
+
+test_irods_slurm_desc ()
+{
+ local result=""
+ local UUID=${1:-$(get_irods_slurm_var uuid)}
+ [ -n "$UUID" ]
+}
+
+#=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+#--- ( DESTROY )
+
+destroy_irods_slurm_desc ()
+{
+    local M=$(basename "$MUTX")
+    if [ -n "$M" ];  then
+        local UUID=$(get_irods_slurm_var uuid)
+        irm -fr "$MUTX"
+        rm -f "/tmp/$M"
+    fi
+}
+
+#=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+#--- ( GET descriptor name )
+
+get_irods_slurm_desc ()
+{
+  echo -n "$MUTX"
+}
+
+#=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+#    get and set through metadata attached to the $MUTX job descriptor
+#    ( an iRODS data object )
+
+set_irods_slurm_var ()
+{
+  imeta set -d "$MUTX" "$1" "$2" ${3+"$3"}
+}
+
+#=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+#--- ( GET variable name from metadata for this SLURM job )
+
+get_irods_slurm_var ()
+{
+  local status=0
+  local M=$(basename "$MUTX")
+  local result=$(iquest '%s' \
+   "select META_DATA_ATTR_VALUE where \
+    DATA_NAME = '$M'  and \
+    META_DATA_ATTR_NAME = '$1' and \
+    COLL_NAME not like '%/trash/%'")
+
+  if [[ $result = CAT_NO_ROWS_FOUND* ]]
+  then
+    result=""; status=1
+  fi
+
+  echo "$result"
+
+  return $status
+}
