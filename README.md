@@ -22,15 +22,20 @@ git clone https://github.com/irods/irods_pattern_data_to_compute
 ```
 
 Build the Data To Compute package
+
 ```
-cd
-git clone https://github.com/irods/irods_training
 sudo apt-get -y install irods-externals-cmake3.5.2-0 irods-dev
 export PATH=/opt/irods-externals/cmake3.5.2-0/bin/:$PATH
+cd
+mkdir build_data_to_compute
+cd build_data_to_compute
+cmake ../irods_training/advanced/hpc_data_to_compute/
+make package
+sudo dpkg -i ./irods-hpc-data-to-compute-example_4.2.7~xenial_amd64.deb
 ```
 
 Build SLURM and its prerequisite `munged`
+
 ```
-cd ~/irods_training/advanced/hpc_data_to_compute/
-./ubuntu_16/install_munge_and_slurm.sh
+~/irods_pattern_data_to_compute/ubuntu_16/install_munge_and_slurm.sh
 ```
