@@ -29,7 +29,7 @@ export PATH=/opt/irods-externals/cmake3.5.2-0/bin/:$PATH
 cd
 mkdir build_data_to_compute
 cd build_data_to_compute
-cmake ../irods_training/advanced/hpc_data_to_compute/
+cmake ../irods_pattern_data_to_compute/
 make package
 sudo dpkg -i ./irods-hpc-data-to-compute-example_4.2.7~xenial_amd64.deb
 ```
