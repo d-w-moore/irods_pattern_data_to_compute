@@ -50,4 +50,19 @@ Build SLURM and its prerequisite `munged`
 
 ---
 
+Make sure that iRODS server is running
+```
+sudo su - irods -c '~/irodsctl restart'
+```
 
+Create storage resources for the demo:
+  - As `ubuntu` user:
+    ```
+    sudo mkdir /iRods
+    sudo chmod irods:irods /iRods
+    ```
+  - As `irods` (service account) user:
+    ```
+    iadmin mkresc img_resc unixfilesystem `hostname`:/iRods/img_resc
+    iadmin mkresc lts_resc unixfilesystem `hostname`:/iRods/lts_resc
+    ```
