@@ -61,28 +61,34 @@ Create storage resources for the demo:
     sudo mkdir /iRods
     sudo chmod irods:irods /iRods
     ```
-  - As `irods` (service account) user:
+  - As `irods` (service account) user, create resources:
     ```
     iadmin mkresc img_resc unixfilesystem `hostname`:/iRods/img_resc
     iadmin mkresc lts_resc unixfilesystem `hostname`:/iRods/lts_resc
     ```
-    
-Add metadata annotations (for compute roles) onto storage resources
-```
-imeta add -R lts_resc COMPUTE_RESOURCE_ROLE LONG_TERM_STORAGE
-imeta add -R img_resc COMPUTE_RESOURCE_ROLE IMAGE_PROCESSING
-```
+    - and add metadata annotations (for compute roles) onto storage resources
+    ```
+    imeta add -R lts_resc COMPUTE_RESOURCE_ROLE LONG_TERM_STORAGE
+    imeta add -R img_resc COMPUTE_RESOURCE_ROLE IMAGE_PROCESSING
+    ```
 
-Stage input file for demo
+#Demo
+
+Also as user `irods`:
+
+  1. Stage input:
+
 ```
 icd
 iput /tmp/stickers.jpg
-```
-
-```
 irods@ub16dc:~$ ils -l
 /tempZone/home/rods:
   rods              0 demoResc      2157087 2020-03-12.08:23 & stickers.jpg
+```
+
+Run the rule script:
+
+```
 irods@ub16dc:~$ irule -F spawn_remote_slurm_jobs.r
 host=[ub16dc]
 irods@ub16dc:~$ squeue 
@@ -106,4 +112,4 @@ irods@ub16dc:~$ ils -lr
   rods              1 lts_resc        63029 2020-03-12.08:27 & stickers_thumbnail_512x512.jpg
 irods@ub16dc:~$ 
 ```
-```
+
